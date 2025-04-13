@@ -8,8 +8,8 @@ class Virglrenderer < Formula
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "knazarov/qemu-virgl/libangle"
-  depends_on "knazarov/qemu-virgl/libepoxy-angle"
+  depends_on "phygrid/qemu-virgl/libangle"
+  depends_on "phygrid/qemu-virgl/libepoxy-angle"
 
   # waiting for upstreaming of https://github.com/akihikodaki/virglrenderer/tree/macos
   patch :p1 do
@@ -19,8 +19,8 @@ class Virglrenderer < Formula
 
   def install
     mkdir "build" do
-      system "meson", *std_meson_args, "-Dc_args=-I#{Formula["libepoxy-angle"].opt_prefix}/include",
-             "-Dc_link_args=-L#{Formula["libepoxy-angle"].opt_prefix}/lib", ".."
+      system "meson", *std_meson_args, "-Dc_args=-I#{Formula["phygrid/qemu-virgl/libepoxy-angle"].opt_prefix}/include",
+             "-Dc_link_args=-L#{Formula["phygrid/qemu-virgl/libepoxy-angle"].opt_prefix}/lib", ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end

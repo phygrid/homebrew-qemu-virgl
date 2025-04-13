@@ -9,7 +9,7 @@ class LibepoxyAngle < Formula
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "python@3.9" => :build
-  depends_on "knazarov/qemu-virgl/libangle"
+  depends_on "phygrid/qemu-virgl/libangle"
 
   # waiting for upstreaming of https://github.com/akihikodaki/libepoxy/tree/macos
   patch :p1 do
@@ -19,8 +19,8 @@ class LibepoxyAngle < Formula
 
   def install
     mkdir "build" do
-      system "meson", *std_meson_args, "-Dc_args=-I#{Formula["libangle"].opt_prefix}/include",
-             "-Dc_link_args=-L#{Formula["libangle"].opt_prefix}/lib", "-Degl=yes", "-Dx11=false",
+      system "meson", *std_meson_args, "-Dc_args=-I#{Formula["phygrid/qemu-virgl/libangle"].opt_prefix}/include",
+             "-Dc_link_args=-L#{Formula["phygrid/qemu-virgl/libangle"].opt_prefix}/lib", "-Degl=yes", "-Dx11=false",
              "-Dfallback-libdir=#{HOMEBREW_PREFIX}/lib", ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
