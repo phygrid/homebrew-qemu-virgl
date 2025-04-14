@@ -1,6 +1,6 @@
 # 3D accelerated qemu on MacOS
 
-> **Note:** This is a fork of the original `knazarov/homebrew-qemu-virgl` tap. It incorporates patches that fix certain issues (like  missing FreeDOS 1.2 verification image (FD12FLOPPY.zip) and adds improved support for Apple's `vmnet.framework` for improved networking features on macOS.
+> **Note:** This is a fork of the original [knazarov/homebrew-qemu-virgl](https://github.com/knazarov/homebrew-qemu-virgl) tap. It incorporates patches that fix certain issues (like  missing FreeDOS 1.2 verification image (FD12FLOPPY.zip) and adds improved support for Apple's `vmnet.framework` for improved networking features on macOS.
 
 ![ubuntu](https://user-images.githubusercontent.com/6728841/111193747-90da1a00-85cb-11eb-9517-36c1a19c19be.gif)
 
@@ -18,9 +18,9 @@ Features:
 
 ## Installation
 
-`brew install knazarov/qemu-virgl/qemu-virgl`
+`brew install phygrid/qemu-virgl/qemu-virgl`
 
-Or `brew tap knazarov/qemu-virgl` and then `brew install qemu-virgl`.
+Or `brew tap phygrid/qemu-virgl` and then `brew install qemu-virgl`.
 
 
 ## Usage
