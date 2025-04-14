@@ -2,7 +2,7 @@ class QemuVirgl < Formula
   desc "Emulator for x86 and PowerPC"
   homepage "https://www.qemu.org/"
   url "https://github.com/qemu/qemu.git", using: :git, revision: "99fc08366b06282614daeda989d2fde6ab8a707f"
-  version "20211212.1"
+  version "20250414.1"
   license "GPL-2.0-only"
 
   depends_on "libtool" => :build
@@ -56,6 +56,7 @@ class QemuVirgl < Formula
       --extra-ldflags=-L#{Formula["spice-protocol"].opt_prefix}/lib
       --disable-sdl
       --disable-gtk
+      --enable-vmnet
     ]
     # Sharing Samba directories in QEMU requires the samba.org smbd which is
     # incompatible with the macOS-provided version. This will lead to
