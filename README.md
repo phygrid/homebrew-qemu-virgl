@@ -1,5 +1,7 @@
 # 3D accelerated qemu on MacOS
 
+> **Note:** This is a fork of the original `knazarov/homebrew-qemu-virgl` tap. It incorporates patches that fix certain issues (like  missing FreeDOS 1.2 verification image (FD12FLOPPY.zip) and adds improved support for Apple's `vmnet.framework` for improved networking features on macOS.
+
 ![ubuntu](https://user-images.githubusercontent.com/6728841/111193747-90da1a00-85cb-11eb-9517-36c1a19c19be.gif)
 
 ## What is it for
@@ -183,29 +185,72 @@ with
 
 
 ```
-    -netdev vmnet-macos,id=n1,mode=bridged,ifname=en0 \
-    -device virtio-net,netdev=n1 \
+    -netdev vmnet-bridged,id=n1,ifname=en0 \
+    -device virtio-net-pci,netdev=n1 \
 ```
 
-vmnet also offers "host" and "shared" networking model:
+*(Note: Replace `en0` with your actual primary network interface if different. You can often find this in System Settings -> Network or by running `route -n get default | grep interface:`)*
+
+vmnet also offers "host" and "shared" networking modes:
 
 ```
-   -netdev vmnet-macos,id=str,mode=host|shared[,dhcp_start_address=addr,dhcp_end_address=addr,dhcp_subnet_mask=mask]
+   # Host Mode (VM can talk to host and other host-mode VMs)
+   -netdev vmnet-host,id=net0
+   -device virtio-net-pci,netdev=net0
+
+   # Shared Mode (VM uses NAT to talk to external network via host)
+   -netdev vmnet-shared,id=net0
+   -device virtio-net-pci,netdev=net0
 ```
 
-***caveats:***
+***vmnet caveats:***
 
-1) vmnet requires running qemu as root, for now.
-2) current vmnet API (Apple) doesn't support setting MAC address, so it will be randomized every time the VM is started.
+1) `vmnet-bridged` requires running qemu as root (`sudo`). `vmnet-host` and `vmnet-shared` generally do not.
+2) Current vmnet API (Apple) doesn't support setting MAC address, so it will be randomized every time the VM is started.
 
-To work around 2), for now it's possible to set the MAC address within the VM.
+To work around 2), for now it's possible to set the MAC address within the guest OS. For example, on Linux using systemd-networkd, create a `.link` file (e.g., `/etc/systemd/network/10-persistent-net.link`) for your virtual interface:
 
-As root, create a file `/etc/udev/rules.d/75-mac-vmnet.rules` with the following content:
+```ini
+[Match]
+# Match the virtual interface, e.g., by driver
+Driver=virtio_net
 
+[Link]
+NamePolicy=kernel database onboard slot path
+MACAddress=00:11:22:33:44:55 # Set your desired stable MAC address
 ```
-ACTION=="add", SUBSYSTEM=="net", KERNEL=="enp0s3", RUN+="/usr/bin/ip link set dev %k address 00:11:22:33:44:55"
+
+Reboot the guest or restart `systemd-networkd.service` for the change to take effect. Adapt the `[Match]` section and MAC address as needed.
+
+
+### Example: macOS AArch64 with HVF + Virgl GPU + Bridged Networking
+
+This command launches an AArch64 Linux VM on an Apple Silicon Mac, utilizing the Hypervisor Framework (`accel=hvf`), Virgl 3D acceleration (`virtio-gpu-gl-pci`, `gl=es`), and bridged networking via `vmnet-bridged`.
+
+**Requires running with `sudo`**. You'll need to provide your own kernel/initrd (if applicable) and disk image. Ensure you have the EDK2 firmware files (`edk2-aarch64-code.fd`, `edk2-arm-vars.fd`) copied to the working directory.
+
+```sh
+# Example assumes firmware files are in the current directory
+# Replace kernel path and disk path with your actual files
+# Replace en0 if your network interface is different
+
+sudo qemu-system-aarch64 \\
+    -machine virt,accel=hvf,highmem=off \\
+    -cpu host \\
+    -m 4G \\
+    -smp 4 \\
+    -drive "if=pflash,format=raw,file=./edk2-aarch64-code.fd,readonly=on" \\
+    -drive "if=pflash,format=raw,file=./edk2-arm-vars.fd" \\
+    -kernel path/to/your/linux_kernel \\
+    -append "root=/dev/vda rw console=ttyAMA0" \\
+    -drive "if=virtio,format=raw,file=./disk.raw,id=hd0" \\
+    -device virtio-blk-pci,drive=hd0 \\
+    -netdev vmnet-bridged,id=net0,ifname=en0 \\
+    -device virtio-net-pci,netdev=net0 \\
+    -device virtio-gpu-gl-pci \\
+    -display cocoa,gl=es \\
+    -device qemu-xhci \\
+    -device usb-tablet \\
+    -device usb-kbd
+    # Add other devices like sound as needed: -device intel-hda -device hda-output
 ```
-
-replace `enp0s3` with the name of your interface and `00:11:22:33:44:55` with the desired MAC address.
-
-Reboot or issue a `ip link set dev enp0s3 address 00:11:22:33:44:55` to change your MAC address.
